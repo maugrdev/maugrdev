@@ -10,9 +10,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); // Tu web
 
 // Rutas API
-const API = "https://maugrdev.onrender.com/api/testimonios/testimonios";
-app.use("/api/testimonios", testimoniosRoutes);
+const testimoniosRoutes = require("./routes/testimonios"); // ✅ IMPORTAR
+app.use("/api/testimonios", testimoniosRoutes);            // ✅ USAR
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("🚀 Servidor en puerto " + PORT));
-
