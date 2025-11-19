@@ -1,39 +1,44 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const dbConfig = require('../db_config');
+const db = require("../db_config");
 
-router.get('/testimonios', async (req, res) => {
-    try {
-        const connection = await dbConfig.getConnection();
-        const [rows] = await connection.execute('SELECT nombre, puesto, opinion, imagen FROM testimonios');
-        
-        res.json(rows); 
-        
-        connection.release();
-    } catch (error) {
-        console.error('Error al obtener testimonios de la BD:', error);
-        
-        // Manejo de error mejorado para el cliente
-        res.status(500).json({ error: 'Error interno del servidor al obtener testimonios.' });
-    }
-});
-router.post('/testimonios', async (req, res) => {
+// GET testimonios
+router.get("/testimonios", (req, res) => {
   try {
-    const { nombre, puesto, opinion, imagen } = req.body;
-
-    const connection = await dbConfig.getConnection();
-    await connection.execute(
-      'INSERT INTO testimonios (nombre, puesto, opinion, imagen) VALUES (?, ?, ?, ?)',
-      [nombre, puesto, opinion, imagen]
-    );
-    connection.release();
-
-    res.status(201).json({ mensaje: 'Testimonio agregado con éxito' });
-  } catch (error) {
-    console.error('Error al guardar testimonio:', error);
-    res.status(500).json({ error: 'Error interno del servidor al guardar testimonio.' });
+    const rows = db.prepare("SELECT * FROM testimonios ORDER BY id DESC").all();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
+// POST testimonio
+router.post("/testimonios", (req, res) => {
+  const { nombre, mensaje, foto, rating } = req.body;
+  if (!nombre || !mensaje) {
+    return res.status(400).json({ error: "Datos incompletos" });
+  }
+
+  const fecha = new Date().toISOString();
+  try {
+    const stmt = db.prepare(
+      "INSERT INTO testimonios (nombre, mensaje, fecha, foto, rating) VALUES (?, ?, ?, ?, ?)"
+    );
+    const result = stmt.run(nombre, mensaje, fecha, foto || "", rating || 5);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE testimonio
+router.delete("/testimonios/:id", (req, res) => {
+  try {
+    db.prepare("DELETE FROM testimonios WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
