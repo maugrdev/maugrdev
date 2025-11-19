@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const dbConfig = require('./db_config');
+const dbConfig = require('../db_config');
 
 router.get('/testimonios', async (req, res) => {
     try {
@@ -34,5 +34,6 @@ router.post('/testimonios', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor al guardar testimonio.' });
   }
 });
+
 
 module.exports = router;
